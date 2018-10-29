@@ -6,7 +6,8 @@ window.console = (function (origConsole) {
 
     var isDebug = false, isSaveLog = false,
         logArray = {
-            logs: [],
+            nEntry: 1,
+            logs: {},
             errors: [],
             warns: [],
             infos: []
@@ -39,10 +40,31 @@ window.console = (function (origConsole) {
             if (!isSaveLog) {
                 return;
             }
-            logArray.logs.push(arguments);
+            var sKey = logArray.nEntry + "-" + new Date().toISOString();
+            logArray.nEntry++;
+            logArray.logs[sKey] = arguments[0];
         },
         logArray: function () {
             return logArray;
+        },
+        saveToBitBucket: function(sBbAccount, sComponent, sTitle, sUser) {
+            var http = new XMLHttpRequest();
+            var url = "https://bitbucket.org/api/1.0/repositories/" + sBbAccount + "/" + sComponent +"/issues/";
+            var params = "title="+ encodeURI(sTitle)+
+            "&user="+encodeURI(sUser)+
+            "&content=" + encodeURI(JSON.stringify(console.logArray().logs));
+            http.open('POST', url, true);
+
+            //Send the proper header information along with the request
+            http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            http.setRequestHeader("Authorization", "Basic eXNhYXNpc3N1ZXM6U2VjcmV0NTU=");
+
+            http.onreadystatechange = function() {//Call a function when the state changes.
+                if(http.readyState == 4 && http.status == 200) {
+                    console.log(http.responseText);
+                }
+            }
+            http.send(params);
         }
     };
 
