@@ -4,11 +4,13 @@ window.console = (function (origConsole) {
         origConsole = {};
     }
 
-    if(localStorage.getItem("guid") == null){
-        localStorage.setItem("guid", uuid.v4());
-    }
     var isDebug = false, isSaveLog = false,
-        oFirebase = new Firebase('https://dazzling-heat-1553.firebaseio.com/logs/' + localStorage.getItem("guid"));
+        logArray = {
+            logs: [],
+            errors: [],
+            warns: [],
+            infos: []
+        };
 
     return {
         log: function () {
@@ -37,11 +39,10 @@ window.console = (function (origConsole) {
             if (!isSaveLog) {
                 return;
             }
-            if(typeof(arguments[0]) != "object"){
-                arguments[0] = {message: arguments[0]};
-            }
-            arguments[0].timestamp = new Date().toISOString();
-            oFirebase.push().set(arguments[0]);
+            logArray.logs.push(arguments);
+        },
+        logArray: function () {
+            return logArray;
         }
     };
 
